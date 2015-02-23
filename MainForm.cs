@@ -11,6 +11,13 @@ namespace Flying47
     {
         // Base address value for pointers.
         int baseAddress = 0x10000000;
+        int instruction1ZAddress = 0x0068CB43;
+        uint instruction1Normal = 0x83344889;
+        uint instruction1Nop = 0x83909090;
+        int instruction2ZAddress = 0x00860D93;
+        uint instruction2Normal = 0x8B344889;
+        uint instruction2Nop = 0x8B909090;
+
 
         // Other variables.
         System.Text.Encoding enc = System.Text.Encoding.UTF8;
@@ -27,6 +34,11 @@ namespace Flying47
         int[] offsetX = new int[] { 0x44, 0x28 };
         int[] offsetY = new int[] { 0x44, 0x2c };
         int[] offsetZ = new int[] { 0x44, 0x30 };
+
+        float readCameraCoordZ = 0;
+        float CameraCoordZ = 0;
+        int adressCamera = 0x00D610D8;
+        int[] offsetCameraZ = new int[] { 0x4, 0xC, 0x34 };
 
         Keys ToggleKey = Keys.F2;
 
@@ -77,9 +89,10 @@ namespace Flying47
                 L_Y.Text = readCoordY.ToString();
                 readCoordZ = Trainer.ReadPointerFloat(processName, baseAddress + adressCoord, offsetZ);
                 L_Z.Text = readCoordZ.ToString();
+                readCameraCoordZ = Trainer.ReadPointerFloat(processName, baseAddress + adressCamera, offsetCameraZ);
 
                 if (freezeEnabled)
-                    freeze();
+                    handlefly();
                 InitHotkey();
             }
             else
@@ -158,8 +171,28 @@ namespace Flying47
 
         private void freeze()
         {
-            if (readCoordZ != CoordZ)
+            Trainer.WriteUint32(processName, instruction1ZAddress, instruction1Nop);
+            Trainer.WriteUint32(processName, instruction2ZAddress, instruction2Nop);
+        }
+
+        private void unfreeze()
+        {
+            Trainer.WriteUint32(processName, instruction1ZAddress, instruction1Normal);
+            Trainer.WriteUint32(processName, instruction2ZAddress, instruction2Normal);
+        }
+
+        private void handlefly()
+        {
+            if(CoordZ != readCoordZ)
+            {
                 Trainer.WritePointerFloat(processName, baseAddress + adressCoord, offsetZ, CoordZ);
+            }
+
+            if (CameraCoordZ != readCameraCoordZ + 2.0f)
+            {
+                CameraCoordZ = CoordZ + 2.0f;
+                Trainer.WritePointerFloat(processName, baseAddress + adressCamera, offsetCameraZ, CameraCoordZ);
+            }
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
@@ -246,10 +279,12 @@ namespace Flying47
             if (C_Freeze.Checked)
             {
                 CoordZ = readCoordZ;
+                freeze();
                 freezeEnabled = true;
             }
             else
             {
+                unfreeze();
                 freezeEnabled = false;
             }
         }

@@ -38,6 +38,8 @@ public class Trainer
     private static extern float WriteProcessMemoryFloat(int Handle, int Address, ref float Value, int Size, ref int BytesWritten);
     [DllImport("kernel32", EntryPoint = "WriteProcessMemory")]
     private static extern double WriteProcessMemoryDouble(int Handle, int Address, ref double Value, int Size, ref int BytesWritten);
+    [DllImport("kernel32", EntryPoint = "WriteProcessMemory")]
+    private static extern double WriteProcessMemoryUInt32(int Handle, int Address, ref uint Value, int Size, ref int BytesWritten);
 
 
     [DllImport("kernel32", EntryPoint = "ReadProcessMemory")]
@@ -48,6 +50,8 @@ public class Trainer
     private static extern float ReadProcessMemoryFloat(int Handle, int Address, ref float Value, int Size, ref int BytesRead);
     [DllImport("kernel32", EntryPoint = "ReadProcessMemory")]
     private static extern double ReadProcessMemoryDouble(int Handle, int Address, ref double Value, int Size, ref int BytesRead);
+    [DllImport("kernel32", EntryPoint = "ReadProcessMemory")]
+    private static extern double ReadProcessMemoryUInt32(int Handle, int Address, ref uint Value, int Size, ref int BytesRead);
     [DllImport("kernel32")]
     private static extern int CloseHandle(int Handle);
 
@@ -170,6 +174,31 @@ public class Trainer
                     if (Handle != 0)
                     {
                         ReadProcessMemoryDouble((int)Handle, Address, ref Value, 8, ref Bytes);
+                        CloseHandle(Handle);
+                    }
+                }
+            }
+            catch
+            { }
+        }
+        return Value;
+    }
+
+    public static uint ReadUint32(string EXENAME, int Address)
+    {
+        uint Value = 0;
+        checked
+        {
+            try
+            {
+                Process[] Proc = Process.GetProcessesByName(EXENAME);
+                if (Proc.Length != 0)
+                {
+                    int Bytes = 0;
+                    int Handle = OpenProcess(PROCESS_ALL_ACCESS, 0, Proc[0].Id);
+                    if (Handle != 0)
+                    {
+                        ReadProcessMemoryUInt32((int)Handle, Address, ref Value, 4, ref Bytes);
                         CloseHandle(Handle);
                     }
                 }
@@ -378,6 +407,29 @@ public class Trainer
                     if (Handle != 0)
                     {
                         WriteProcessMemoryDouble(Handle, Address, ref Value, 8, ref Bytes);
+                    }
+                    CloseHandle(Handle);
+                }
+            }
+            catch
+            { }
+        }
+    }
+
+    public static void WriteUint32(string EXENAME, int Address, uint Value)
+    {
+        checked
+        {
+            try
+            {
+                Process[] Proc = Process.GetProcessesByName(EXENAME);
+                if (Proc.Length != 0)
+                {
+                    int Bytes = 0;
+                    int Handle = OpenProcess(PROCESS_ALL_ACCESS, 0, Proc[0].Id);
+                    if (Handle != 0)
+                    {
+                        WriteProcessMemoryUInt32(Handle, Address, ref Value, 4, ref Bytes);
                     }
                     CloseHandle(Handle);
                 }

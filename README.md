@@ -1,3 +1,3 @@
-Deus Ex: The Fall FOV Changer
+Simple tool for flying in Hitman Absolution	
 ============
-My little FOV Changer for Deus Ex: The Fall.
+Use only for map exploration!
