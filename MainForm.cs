@@ -64,43 +64,50 @@ namespace Flying47
 
         private void Timer_Tick(object sender, EventArgs e)
         {
-            myProcess = Process.GetProcessesByName(processName);
-            if (myProcess.Length > 0)
+            try
             {
-                IntPtr startOffset = myProcess[0].MainModule.BaseAddress;
-                IntPtr endOffset = IntPtr.Add(startOffset, myProcess[0].MainModule.ModuleMemorySize);
-                baseAddress = startOffset.ToInt32();
-                if (foundProcess == false)
-                    System.Threading.Thread.Sleep(1000);
-                foundProcess = true;
+                myProcess = Process.GetProcessesByName(processName);
+                if (myProcess.Length > 0)
+                {
+                    IntPtr startOffset = myProcess[0].MainModule.BaseAddress;
+                    IntPtr endOffset = IntPtr.Add(startOffset, myProcess[0].MainModule.ModuleMemorySize);
+                    baseAddress = startOffset.ToInt32();
+                    if (foundProcess == false)
+                        System.Threading.Thread.Sleep(1000);
+                    foundProcess = true;
+                }
+                else
+                    foundProcess = false;
+                
+                if (foundProcess)
+                {
+                    // The game is running, ready for memory reading.
+                    LB_Running.Text = "Hitman: Absolution is running";
+                    LB_Running.ForeColor = Color.Green;
+                    
+                    readCoordX = Trainer.ReadPointerFloat(processName, baseAddress + adressCoord, offsetX);
+                    L_X.Text = readCoordX.ToString();
+                    readCoordY = Trainer.ReadPointerFloat(processName, baseAddress + adressCoord, offsetY);
+                    L_Y.Text = readCoordY.ToString();
+                    readCoordZ = Trainer.ReadPointerFloat(processName, baseAddress + adressCoord, offsetZ);
+                    L_Z.Text = readCoordZ.ToString();
+                    readCameraCoordZ = Trainer.ReadPointerFloat(processName, baseAddress + adressCamera, offsetCameraZ);
+                    
+                    if (freezeEnabled)
+                        handlefly();
+                    InitHotkey();
+                }
+                else
+                {
+                    // The game process has not been found, reseting values.
+                    LB_Running.Text = "Hitman: Absolution is NOT running";
+                    LB_Running.ForeColor = Color.Red;
+                    ResetValues();
+                }
             }
-            else
-                foundProcess = false;
-
-            if (foundProcess)
+            catch(Exception ex)
             {
-                // The game is running, ready for memory reading.
-                LB_Running.Text = "Hitman: Absolution is running";
-                LB_Running.ForeColor = Color.Green;
-
-                readCoordX = Trainer.ReadPointerFloat(processName, baseAddress + adressCoord, offsetX);
-                L_X.Text = readCoordX.ToString();
-                readCoordY = Trainer.ReadPointerFloat(processName, baseAddress + adressCoord, offsetY);
-                L_Y.Text = readCoordY.ToString();
-                readCoordZ = Trainer.ReadPointerFloat(processName, baseAddress + adressCoord, offsetZ);
-                L_Z.Text = readCoordZ.ToString();
-                readCameraCoordZ = Trainer.ReadPointerFloat(processName, baseAddress + adressCamera, offsetCameraZ);
-
-                if (freezeEnabled)
-                    handlefly();
-                InitHotkey();
-            }
-            else
-            {
-                // The game process has not been found, reseting values.
-                LB_Running.Text = "Hitman: Absolution is NOT running";
-                LB_Running.ForeColor = Color.Red;
-                ResetValues();
+                Debug.WriteLine(ex.ToString());
             }
         }
 
